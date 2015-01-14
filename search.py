@@ -47,12 +47,13 @@ class ExampleFrame(wx.Frame):
                 s="*".join(lL)
                 os.system('find . -iname \'*'+s+'*\' >> results.txt')
         f=open('results.txt','r')
-        ret=f.readlines()
+        temp=f.readlines()
         f.close()
         os.system('rm results.txt')
-        for x in ret:
-            if ret.count(x)>1:
-                ret.remove(x)
+        ret=[]
+        for x in temp:
+            if x not in ret:
+                ret.add(x)
         return ret
     def sesame(self,e):
         i=self.results.GetCurrentSelection()
