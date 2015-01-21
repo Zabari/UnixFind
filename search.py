@@ -11,13 +11,14 @@ class ExampleFrame(wx.Frame):
         self.searchname = wx.StaticText(self.panel, label="Your Search Query:")
         self.search = wx.TextCtrl(self.panel, size=(140, -1))
         #self.result.SetForegroundColour(wx.RED)
-        os.system("cd ..;pwd >> dir.txt")
-        os.system("pwd >> ../dir.txt")
-        os.system("ls -p | grep \"/\" >> ../dir.txt")
-        f=open('../dir.txt','r')
+        os.system("cd ..;pwd >> ~/dir.txt")
+        os.system("pwd >> ~/dir.txt")
+        os.system("ls -p | grep \"/\" >> ~/dir.txt")
+	    home=os.getenv("HOME")
+        f=open(home + '/dir.txt','r')
         self.dirL=f.readlines()
         f.close()
-        os.system('rm ../dir.txt')
+        os.system('rm ~/dir.txt')
         self.dirL=[line[:-1] for line in self.dirL]
         self.select=wx.Choice(self.panel, choices=['or','and'])
         self.dir=wx.Choice(self.panel, pos=(1,1), choices=self.dirL)
@@ -59,15 +60,16 @@ class ExampleFrame(wx.Frame):
         #print c
         if c==0:#radio whatever = or
             for x in L:
-                os.system('find '+dirx+' -iname \'*'+x+'*\' >> results.txt')
+                os.system('find '+dirx+' -iname \'*'+x+'*\' >> ~/results.txt')
         if c==1:#radio whatever = and
             for lL in itertools.permutations(L):
                 s="*".join(lL)
-                os.system('find '+dirx+' -iname \'*'+s+'*\' >> results.txt')
-        f=open('results.txt','r')
+                os.system('find '+dirx+' -iname \'*'+s+'*\' >> ~/results.txt')
+        home=os.getenv("HOME")
+	    f=open(home+'/results.txt','r')
         temp=f.readlines()
         f.close()
-        os.system('rm results.txt')
+        os.system('rm ~/results.txt')
         ret=[]
         for x in temp:
             if x not in ret:
