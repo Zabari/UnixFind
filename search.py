@@ -3,6 +3,16 @@
 import os, wx, re, itertools
 
 class ExampleFrame(wx.Frame):
+    def populate(self,path):
+        os.system("cd \""+path+"\";"+"cd ..;pwd >> ~/dir.txt")
+        os.system("cd \""+path+"\";"+"pwd >> ~/dir.txt")
+        os.system("cd \""+path+"\";"+"ls -dp -1 $PWD/** | grep \"/$\" >> ~/dir.txt")
+        home=os.getenv("HOME")
+        f=open(home + '/dir.txt','r')
+        self.dirL=f.readlines()
+        f.close()
+        os.system('rm ~/dir.txt')
+        self.dirL=[line[:-1] for line in self.dirL]
     def __init__(self, parent):
         wx.Frame.__init__(self, parent)
         self.L=[]
@@ -11,15 +21,7 @@ class ExampleFrame(wx.Frame):
         self.searchname = wx.StaticText(self.panel, label="Your Search Query:")
         self.search = wx.TextCtrl(self.panel, size=(140, -1))
         #self.result.SetForegroundColour(wx.RED)
-        os.system("cd ..;pwd >> ~/dir.txt")
-        os.system("pwd >> ~/dir.txt")
-        os.system("ls -p | grep \"/\" >> ~/dir.txt")
-	    home=os.getenv("HOME")
-        f=open(home + '/dir.txt','r')
-        self.dirL=f.readlines()
-        f.close()
-        os.system('rm ~/dir.txt')
-        self.dirL=[line[:-1] for line in self.dirL]
+        self.populate('.')
         self.select=wx.Choice(self.panel, choices=['or','and'])
         self.dir=wx.Choice(self.panel, pos=(1,1), choices=self.dirL)
         self.button = wx.Button(self.panel, label="Search")
@@ -30,6 +32,7 @@ class ExampleFrame(wx.Frame):
 
         self.open=wx.Button(self.panel, label='Open')
         self.open.Disable()
+        self.cwd=wx.StaticText(self.panel,label="")
 
 
 
@@ -41,6 +44,7 @@ class ExampleFrame(wx.Frame):
         self.sizer.Add(self.results,(2,0))
         self.sizer.Add(self.select,(2,1))
         self.sizer.Add(self.open,(3,1))
+        self.sizer.Add(self.cwd,(0,1))
         #self.sizer.Add(self.result, (0, 1))
         self.sizer.Add(self.button, (3, 0))
 
@@ -55,18 +59,19 @@ class ExampleFrame(wx.Frame):
 
         # Set event handlers
         self.button.Bind(wx.EVT_BUTTON, self.OnButton)
+        self.dir.Bind(wx.EVT_SET_FOCUS,self.onFocus)
     def lookup(self,L,dirx):
         c=self.select.GetCurrentSelection()
         #print c
         if c==0:#radio whatever = or
             for x in L:
-                os.system('find '+dirx+' -iname \'*'+x+'*\' >> ~/results.txt')
+                os.system('find '+"\""+dirx+"\""+' -iname \'*'+x+'*\' >> ~/results.txt')
         if c==1:#radio whatever = and
             for lL in itertools.permutations(L):
                 s="*".join(lL)
-                os.system('find '+dirx+' -iname \'*'+s+'*\' >> ~/results.txt')
+                os.system('find '+"\""+dirx+"\""+' -iname \'*'+s+'*\' >> ~/results.txt')
         home=os.getenv("HOME")
-	    f=open(home+'/results.txt','r')
+        f=open(home+'/results.txt','r')
         temp=f.readlines()
         f.close()
         os.system('rm ~/results.txt')
@@ -77,12 +82,12 @@ class ExampleFrame(wx.Frame):
         return ret
     def sesame(self,e):
         i=self.results.GetCurrentSelection()
-        os.system('nautilus ' + self.L[i])
+        os.system('nautilus ' + '"'+self.L[i]+'"')
 
     def OnButton(self, e):
         self.open.Enable()
         s=self.search.GetValue()
-        L=self.lookup(s.split(' '),self.dirL[self.dir.GetCurrentSelection()])
+        L=self.lookup(s.split(' '),self.cwd.GetLabel())
         L=[line[:-1] for line in L]
         self.L=L
         self.results.Clear()
@@ -98,7 +103,15 @@ class ExampleFrame(wx.Frame):
 
         #os.system("printf '%s' "+new)
         #os.system("echo "+conf)
-
+        
+    def onFocus(self,evt):
+        # refresh your items with .Clear, .Append(), etc
+        # I'm just adding new item every time user clicks on control
+        s=self.dirL[self.dir.GetCurrentSelection()]
+        self.cwd.SetLabel(s)
+        self.populate(s)
+        self.dir.Clear()
+        self.dir.AppendItems(self.dirL)
 app = wx.App(False)
 frame = ExampleFrame(None)
 frame.Show()
